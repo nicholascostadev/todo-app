@@ -1,9 +1,19 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { cn } from '$lib/utils.js';
-	import { Trash } from 'lucide-svelte';
+	import TodoContent from '$lib/components/TodoContent.svelte';
 	import { flip } from 'svelte/animate';
-	import { fade, fly } from 'svelte/transition';
+	import { cubicInOut } from 'svelte/easing';
+	import { crossfade, fade, fly, slide } from 'svelte/transition';
+
+	const [send, receive] = crossfade({
+		easing: cubicInOut,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		fallback: (node) => {
+			const leftSide = node.attributes.getNamedItem('data-side')?.value === 'left';
+			console.log(node.attributes.getNamedItem('data-side'));
+			return fly(node, { x: leftSide ? -150 : 150, y: 0, easing: cubicInOut });
+		}
+	});
 
 	export let data;
 	export let form:
@@ -13,11 +23,23 @@
 				title: string;
 		  }
 		| undefined;
-	function todoStateClass(completed: boolean) {
-		return completed ? 'bg-green-500' : 'bg-red-500';
-	}
 
 	$: form?.ok === false && alert(form.message);
+
+	$: completed = data.todos.filter((todo) => todo.completed);
+	$: uncompleted = data.todos.filter((todo) => !todo.completed);
+	$: sections = [
+		{
+			title: 'Not completed',
+			status: 'incomplete',
+			todos: uncompleted
+		},
+		{
+			title: 'Completed',
+			status: 'completed',
+			todos: completed
+		}
+	];
 </script>
 
 <main class="mx-auto container px-8">
@@ -43,41 +65,45 @@
 			</form>
 		</div>
 
-		{#if data.todos.length === 0}
-			{#if !data.ok}
-				<p class="text-center text-lg" in:fade>
-					There was an error when trying to retrieve your Todos.
-				</p>
-			{/if}
-			<p class="text-center text-lg" in:fade>No Todos yet.</p>
-		{/if}
-
-		{#each data.todos as todo (todo.id)}
-			<div
-				class="flex flex-col gap-1 w-full border border-slate-100 rounded-md p-2"
-				transition:fly={{ x: '100px', y: 'auto' }}
-				animate:flip
-			>
-				<div class="flex justify-between items-center w-full">
-					<h4 class={cn('text-lg', todo.completed && 'line-through')}>{todo.title}</h4>
-					<div class="flex gap-1 items-center">
-						<form method="POST" class="inline-flex items-center gap-1" use:enhance>
+		<div class="grid grid-cols-2 w-full gap-4">
+			{#each sections as section (section.title)}
+				<div class="w-full" transition:fly>
+					<h2 class="text-xl leading-loose flex justify-between items-center">
+						{section.title}
+						<form action="?/clearAll" method="POST" use:enhance>
+							<input type="hidden" name="status" value={section.status} />
 							<button
-								class={cn('h-5 w-5 rounded-md bg-yellow-400', todo.completed && 'bg-green-400')}
-								formaction="?/toggleComplete"
-							/>
-							<input type="hidden" name="title" value={todo.title} />
-							<input type="hidden" name="description" value={todo.description} />
-							<input type="hidden" name="completed" value={todo.completed} />
-							<input type="hidden" name="todoId" value={todo.id} />
-							<button type="submit" formaction="?/deleteTodo">
-								<Trash size={20} class="text-red-500" />
-							</button>
+								class="text-sm enabled:hover:text-red-500 transition-colors disabled:cursor-not-allowed"
+								disabled={section.todos.length <= 0}>Clear all</button
+							>
 						</form>
+					</h2>
+					<div class="flex flex-col gap-2 justify-start items-start transition-all relative">
+						{#if section.todos.length === 0}
+							<p class="absolute top-0 left-0 text-center text-slate-700 text-sm" in:fade>
+								{#if !data.ok}
+									There was an error when trying to retrieve your Todos.
+								{:else if section.status === 'completed'}
+									No completed Todos yet.
+								{:else}
+									No Todos remaining, keep going!
+								{/if}
+							</p>
+						{/if}
+						{#each section.todos as todo (todo.id)}
+							<div
+								class="flex flex-col gap-1 w-full border border-slate-100 rounded-md p-2"
+								animate:flip
+								in:receive={{ key: todo.id }}
+								out:send={{ key: todo.id }}
+								data-side={section.status === 'completed' ? 'right' : 'left'}
+							>
+								<TodoContent {todo} />
+							</div>
+						{/each}
 					</div>
 				</div>
-				<p class="text-sm">{todo.description}</p>
-			</div>
-		{/each}
+			{/each}
+		</div>
 	</div>
 </main>

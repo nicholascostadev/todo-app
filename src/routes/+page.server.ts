@@ -1,5 +1,6 @@
 import type { Todo } from '../types';
 import { getTodos, createTodo, updateTodo, deleteTodo } from './controllers';
+import { clearTodos } from './controllers/clearTodos';
 
 export async function load({ fetch }) {
 	try {
@@ -101,6 +102,14 @@ export const actions = {
 		const { title, description, todoId } = formData;
 
 		try {
+			console.log({
+				sent: {
+					todoId,
+					title,
+					description,
+					completed
+				}
+			});
 			const res = await updateTodo({
 				todoId,
 				title,
@@ -128,6 +137,30 @@ export const actions = {
 				message: 'There was an error when updating the todo.',
 				error: err,
 				todoId
+			};
+		}
+	},
+	clearAll: async ({ fetch, request }) => {
+		const status = String((await request.formData()).get('status'));
+		try {
+			const res = await clearTodos({ fetchParam: fetch, status });
+			if (!res.ok) {
+				return {
+					ok: false,
+					message: 'There was an error when clearing all todos.',
+					error: await res.json()
+				};
+			}
+
+			return {
+				ok: true,
+				message: 'Todos Cleared'
+			};
+		} catch (err) {
+			return {
+				ok: false,
+				message: 'There was an error when clearing all todos.',
+				error: err
 			};
 		}
 	}
