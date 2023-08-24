@@ -7,7 +7,7 @@ type ClearTodosProps = {
 };
 
 export async function clearTodos({ fetchParam = fetch, status }: ClearTodosProps) {
-	return await fetchParam(`${env.BACKEND_URL}/clear-todos?status=${status}`, {
+	return await fetchParam(`${env.BACKEND_URL}/todos/clear-todos?status=${status}`, {
 		method: 'DELETE'
 	});
 }

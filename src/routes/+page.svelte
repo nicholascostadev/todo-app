@@ -3,7 +3,7 @@
 	import TodoContent from '$lib/components/TodoContent.svelte';
 	import { flip } from 'svelte/animate';
 	import { cubicInOut } from 'svelte/easing';
-	import { crossfade, fade, fly, slide } from 'svelte/transition';
+	import { crossfade, fade, fly } from 'svelte/transition';
 
 	const [send, receive] = crossfade({
 		easing: cubicInOut,
