@@ -48,8 +48,6 @@ export const actions = {
 				message: 'Todo Added'
 			};
 		} catch (err) {
-			console.log('Error', err);
-
 			return {
 				ok: false,
 				message: 'There was an error when adding the todo.',
@@ -102,14 +100,6 @@ export const actions = {
 		const { title, description, todoId } = formData;
 
 		try {
-			console.log({
-				sent: {
-					todoId,
-					title,
-					description,
-					completed
-				}
-			});
 			const res = await updateTodo({
 				todoId,
 				title,
@@ -126,7 +116,6 @@ export const actions = {
 					todoId
 				};
 			}
-			console.log('Success', await res.json());
 			return {
 				ok: true,
 				message: 'Todo Updated'

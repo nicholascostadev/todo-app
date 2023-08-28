@@ -10,7 +10,6 @@
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		fallback: (node) => {
 			const leftSide = node.attributes.getNamedItem('data-side')?.value === 'left';
-			console.log(node.attributes.getNamedItem('data-side'));
 			return fly(node, { x: leftSide ? -150 : 150, y: 0, easing: cubicInOut });
 		}
 	});
